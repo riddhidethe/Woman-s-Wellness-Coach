@@ -33,48 +33,81 @@ class MultiModalHealthPlatform:
         return recommendations
             
     def visualize_health_profile(self, cluster_id):
-        # Create an improved radar chart to visualize health dimensions
-        fig, ax = plt.subplots(figsize=(8, 6), subplot_kw=dict(polar=True))
+
+        # Define health dimensions with corresponding icons and meaningful descriptions
+        health_dimensions = [
+            {"name": "Physical Health", "icon": "💪", "description": "Overall physical fitness and medical indicators"},
+            {"name": "Mental Wellness", "icon": "🧘", "description": "Emotional balance and stress management"},
+            {"name": "Preventive Care", "icon": "🩺", "description": "Health screenings and proactive medical checks"},
+            {"name": "Nutrition", "icon": "🥗", "description": "Diet quality and nutritional balance"},
+            {"name": "Physical Activity", "icon": "🏃‍♀️", "description": "Exercise and movement patterns"}
+        ]
+
+        # Generate random scores (in a real scenario, these would be data-driven)
+        np.random.seed(cluster_id)  # Ensure consistent results for same cluster
+        scores = np.random.uniform(0.5, 0.9, 5)
+
+        # Create a figure that mimics a health report card
+        fig, ax = plt.subplots(figsize=(10, 7), facecolor='#fcf7fa')
+        plt.title('Your Wellness Profile', fontsize=16, color='#e75480', fontweight='bold', pad=20)
+
+        # Color palette
+        base_color = '#e75480'
+        background_color = '#fcf7fa'
+        text_color = '#333333'
+
+        # Remove axes
+        ax.set_axis_off()
+
+        # Create a "card" look
+        ax.add_patch(plt.Rectangle((0, 0), 1, 1, fill=False, edgecolor=base_color, linewidth=2, transform=ax.transAxes))
+
+        for i, (dimension, score) in enumerate(zip(health_dimensions, scores)):
+            # Vertical position
+            y_position = 0.8 - (i * 0.15)
+
+            # Icon and text
+            plt.text(0.05, y_position, dimension['icon'], fontsize=20, transform=ax.transAxes, 
+                    verticalalignment='center', color=base_color)
+            plt.text(0.15, y_position, dimension['name'], fontsize=12, transform=ax.transAxes, 
+                    verticalalignment='center', color=text_color, fontweight='bold')
+            plt.text(0.15, y_position-0.03, dimension['description'], fontsize=8, transform=ax.transAxes, 
+                    verticalalignment='center', color='#666666')
+
+            # Progress bar background
+            ax.add_patch(plt.Rectangle((0.5, y_position), 0.4, 0.05, 
+                        facecolor='#e0e0e0', edgecolor='none', transform=ax.transAxes))
+            
+            # Progress bar foreground
+            ax.add_patch(plt.Rectangle((0.5, y_position), 0.4 * score, 0.05, 
+                        facecolor=base_color, edgecolor='none', alpha=0.7, transform=ax.transAxes))
+            
+            # Percentage text
+            plt.text(0.92, y_position, f"{int(score*100)}%", fontsize=10, transform=ax.transAxes, 
+                    verticalalignment='center', horizontalalignment='right', color=text_color)
+
+        # Overall wellness score
+        overall_score = np.mean(scores)
+        plt.text(0.5, 0.05, f"Overall Wellness Score: {int(overall_score*100)}%", 
+                transform=ax.transAxes, horizontalalignment='center', 
+                fontsize=12, fontweight='bold', color=base_color)
+
+        # Wellness level interpretation
+        wellness_levels = {
+            (0, 0.3): "Needs Attention",
+            (0.3, 0.6): "Developing",
+            (0.6, 0.8): "Good",
+            (0.8, 1.0): "Excellent"
+        }
         
-        # Define the dimensions
-        categories = ['Physical', 'Mental', 'Preventive', 'Nutrition', 'Activity']
-        N = len(categories)
-        
-        # Random values for demonstration
-        values = np.random.uniform(0.5, 0.9, N)
-        values = np.append(values, values[0])
-        
-        # Create angles for each dimension
-        angles = [n / float(N) * 2 * np.pi for n in range(N)]
-        angles += angles[:1]
-        
-        # Draw the plot with improved styling
-        ax.plot(angles, values, linewidth=2.5, linestyle='solid', color='#e75480')
-        ax.fill(angles, values, alpha=0.4, color='#f9b7d0')
-        
-        # Add labels with better visibility
-        ax.set_xticks(angles[:-1])
-        ax.set_xticklabels(categories, size=12, fontweight='bold', color='#333333')
-        
-        # Add radial grid with clearer scale
-        ax.set_yticks([0.2, 0.4, 0.6, 0.8, 1.0])
-        ax.set_yticklabels(['20%', '40%', '60%', '80%', '100%'], color='#666666')
-        ax.set_rlabel_position(180 / N)
-        
-        # Improve grid lines
-        ax.grid(True, color='#dddddd', linestyle='--', alpha=0.7)
-        
-        # Add title with better positioning
-        plt.title('Your Health Profile', size=16, color='#e75480', y=1.1, fontweight='bold')
-        
-        # Add value labels at each point for clarity
-        for i, val in enumerate(values[:-1]):
-            angle = angles[i]
-            # Position labels slightly outside the plot points
-            plt.text(angle, val + 0.05, f"{val*100:.0f}%", 
-                    size=9, ha='center', va='center', color='#333333',
-                    bbox=dict(boxstyle="round,pad=0.3", facecolor='white', alpha=0.7))
-        
+        for (low, high), level in wellness_levels.items():
+            if low <= overall_score < high:
+                plt.text(0.5, 0.02, f"Wellness Level: {level}", 
+                        transform=ax.transAxes, horizontalalignment='center', 
+                        fontsize=10, color='#666666')
+                break
+
+        plt.tight_layout(pad=3)
         return fig
 
 # Predefined recommendation rules - simplified from your original
@@ -582,14 +615,6 @@ elif st.session_state.current_page == "My Recommendations":
             st.markdown('<div class="card">', unsafe_allow_html=True)
             st.subheader("Your Health Profile")
             st.pyplot(st.session_state.profile_viz)
-            st.markdown("""
-            <div style="background-color:#f8f9fa; padding:10px; border-radius:5px; margin-top:10px;">
-                <p><strong>How to read this chart:</strong> The radar chart shows different aspects of your wellness profile. 
-                Each axis represents a different health dimension, and the percentage indicates your current standing in that area.
-                Higher percentages (closer to the outer edge) indicate stronger areas of your health profile.</p>
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
             
             # Recommendations in three columns with icons
             st.markdown('<div class="card">', unsafe_allow_html=True)
