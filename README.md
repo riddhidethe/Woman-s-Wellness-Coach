@@ -40,9 +40,6 @@ Women's Wellness Coach is an innovative Streamlit application designed to provid
 - Matplotlib
 - Machine Learning Clustering Techniques
 
-## 🔒 Privacy Notice
-Your health information is completely confidential. We use advanced techniques to protect your personal data and provide personalized insights.
-
 ## 🤝 Contributing
 Interested in improving the Women's Wellness Coach? 
 - Fork the repository
